@@ -1,0 +1,83 @@
+---
+title: "Data Journalism Spreadsheet"
+author: "Daniel Truver"
+date: "9/7/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+library(dplyr)
+library(readxl)
+library(stringr)
+library(lubridate)
+```
+
+```{r}
+events_sheet = read_excel("spreadsheet.xlsx",sheet = 1) 
+contam_sheet = read_excel("spreadsheet.xlsx",sheet = 2) 
+contam_sheet$clean_amount_released = as.numeric(contam_sheet$clean_amount_released)
+region_sheet = read_excel("spreadsheet.xlsx",sheet = 3) 
+```
+
+```{r}
+splits = str_split(events_sheet$city_and_county, ",")
+events_sheet$county = unlist(lapply(splits, function(x){str_remove(x[2], " ")}))
+events_sheet$city = unlist(lapply(splits, function(x){x[1]}))
+```
+
+#### Events by County
+
+```{r}
+county_counts = table(events_sheet$county)
+county_counts
+```
+
+#### Events by City
+
+```{r}
+city_counts = table(events_sheet$city)
+city_counts
+```
+
+#### Events by City and County
+
+```{r}
+city_county_counts = table(events_sheet$city_and_county)
+city_county_counts
+```
+
+#### Finding Unique Chemicals
+
+```{r}
+unique_chems = unique(contam_sheet$contaminant)
+num_chems = sum(!is.na(unique_chems))
+contam_sheet$clean_amount_released_float = contam_sheet$clean_amount_released_float %>%
+  as.numeric()
+```
+
+```{r}
+cyanide_sheet = contam_sheet[which(str_detect(contam_sheet$contaminant, "cyanide")),]
+cyanide_events = events_sheet%>% filter(id == 266565)
+```
+
+<!--
+#### Questions
+
+when was the most released?
+
+who released the most?
+
+most common contaminant?
+
+breakdown by county?
+
+duration of release?
+
+#### Data Diary (for those without R)
+
+events is one per time per area.
+
+there are mutliptle contaminants per event. 
+
+add columns for city and county
